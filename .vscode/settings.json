@@ -9,6 +9,16 @@
             "name": "test",
             "database": "swapshelf_db",
             "username": "djumanov"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "test2",
+            "database": "swapshelf_db",
+            "username": "postgres"
         }
     ]
 }

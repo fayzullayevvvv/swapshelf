@@ -49,7 +49,7 @@ def main() -> None:
                     MessageHandler(Filters.text & ~Filters.command, shelf.set_author)
                 ],
                 states.AddBookStates.SET_GENRE: [
-                    CallbackQueryHandler(shelf.set_genre, pattern="add_book:genre:")
+                    CallbackQueryHandler(shelf.set_genre, pattern=r"^add_book:genre:")
                 ],
                 states.AddBookStates.SET_STATUS: [
                     CallbackQueryHandler(shelf.set_status, pattern="add_book:status:")
