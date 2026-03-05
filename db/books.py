@@ -55,3 +55,14 @@ def get_book(book_id):
             (book_id,),
         )
         return cursor.fetchone()
+
+def save_channel_message_id(book_id, message_id):
+    db = get_db_connection()
+    with db.cursor() as cursor:
+        cursor.execute("""
+            UPDATE books
+            SET available = FALSE
+            WHERE id = %s AND available = TRUE
+            RETURNING channel_message_id, title
+        """, (book_id,))
+        return cursor.fetchall()

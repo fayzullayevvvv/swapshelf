@@ -8,7 +8,8 @@ def get_confirm_keyboard():
         [
             InlineKeyboardButton("Ha", callback_data="ha"),
             InlineKeyboardButton("Yo'q", callback_data="yo'q"),
-        ]
+        ],
+        [InlineKeyboardButton("⬅️ Orqaga", callback_data="back")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -27,10 +28,13 @@ def get_menu_keyboard():
 
 def get_genre_keyboard():
     genres = get_genres()
+
     keyboard = [
         [InlineKeyboardButton(name, callback_data=f"add_book:genre:{genre_id}")]
         for genre_id, name in genres
     ]
+    keyboard.append([InlineKeyboardButton("⬅️ Orqaga", callback_data="back")])
+
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -56,6 +60,7 @@ def get_status_keyboard():
                 "📄 Ko'p ishlatilgan", callback_data="add_book:status:Worn"
             )
         ],
+        [InlineKeyboardButton("⬅️ Orqaga", callback_data="back")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -77,6 +82,7 @@ def get_type_keyboard():
                 "🔀 Ikkalasi ham mumkin", callback_data="add_book:type:Both"
             )
         ],
+        [InlineKeyboardButton("⬅️ Orqaga", callback_data="back")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -84,6 +90,7 @@ def get_type_keyboard():
 def get_book_action_keyboard(book_id):
     keyboard = [
         [InlineKeyboardButton("🎁 Kitobni Ulashish", callback_data=f"share:{book_id}")],
+        [InlineKeyboardButton("⬅️ Orqaga", callback_data="back")],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -92,8 +99,13 @@ def get_book_request_keyboard(book_id):
     keyboard = [
         [
             InlineKeyboardButton(
-                "✅ Kitobni olish uling", callback_data=f"request:{book_id}"
+                "✅ Kitobni olish", callback_data=f"request:{book_id}"
             ),
         ]
     ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_back():
+    keyboard = [[InlineKeyboardButton("⬅️ Orqaga", callback_data="back")]]
     return InlineKeyboardMarkup(keyboard)

@@ -10,20 +10,24 @@ from keyboards.inline import (
     get_type_keyboard,
     get_book_action_keyboard,
     get_book_request_keyboard,
+    get_back,
 )
-from db.books import create_book, get_my_books, get_book
+from db.books import create_book, get_my_books, get_book, save_channel_message_id
 from config import settings
 
 
 def ask_title(update: Update, context: CallbackContext) -> int:
     update.callback_query.answer()
-    update.callback_query.edit_message_text("Kitob nomini kiriting:")
+    update.callback_query.edit_message_text(
+        "Kitob nomini kiriting:",
+        reply_markup=get_back()
+    )
     return states.AddBookStates.SET_TITLE
 
 
 def set_title(update: Update, context: CallbackContext) -> int:
     context.user_data["title"] = update.message.text
-    update.message.reply_text("Kitob muallifini kiriting:")
+    update.message.reply_text("Kitob muallifini kiriting:", reply_markup=get_back())
     return states.AddBookStates.SET_AUTHOR
 
 
@@ -91,26 +95,35 @@ def add_book(update: Update, context: CallbackContext) -> int:
         type_=context.user_data["type"],
     )
 
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
+    msg = context.bot.send_message(
+        chat_id=settings.CHANNEL_ID,
         text=f"📖 {context.user_data['title']}\n✍️ {context.user_data['author']}\n📚 {context.user_data['genre']}\n🔖 {context.user_data['status']}\n🔄 {context.user_data['type']}\n\n",
         reply_markup=get_book_action_keyboard(book_id),
     )
+
+    save_channel_message_id(book_id, msg.message_id)
 
     return ConversationHandler.END
 
 
 def show_my_books(update: Update, context: CallbackContext) -> None:
-    update.callback_query.answer()
+    query = update.callback_query
+    query.answer()
 
     books = get_my_books(update.effective_user.id)
+
     if not books:
-        update.callback_query.edit_message_text("Sizning javoningizda kitob yo'q.")
+        query.edit_message_text(
+            text="Sizning javoningizda kitob yo'q.", reply_markup=get_back()
+        )
         return
+
     message = "Sizning javoningizdagi kitoblar:\n\n"
+
     for pk, title, author, genre, status, type_ in books:
         message += f"📖 {title}\n✍️ {author}\n📚 {genre}\n🔖 {status}\n🔄 {type_}\n\n"
-    update.callback_query.edit_message_text(message)
+
+    query.edit_message_text(text=message, reply_markup=get_back())
 
 
 def share_book(update: Update, context: CallbackContext) -> None:
@@ -128,3 +141,13 @@ def share_book(update: Update, context: CallbackContext) -> None:
         reply_markup=get_book_request_keyboard(book_id),
     )
     query.edit_message_text("Kitob almashish uchun kanalga yuborildi!")
+    update.message.reply_text(reply_markup=get_menu_keyboard())
+
+
+def back_handler(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+
+    query.edit_message_text("🏠 Menu", reply_markup=get_menu_keyboard())
+
+    return ConversationHandler.END
