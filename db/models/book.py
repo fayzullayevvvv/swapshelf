@@ -59,10 +59,10 @@ class Book(Base, TimestampMixin):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('New', 'Good', 'Fair', 'Worn')", name="status"
+            "status IN ('New', 'Good', 'Fair', 'Worn')", name="check_book_status"
         ),
         CheckConstraint(
-            "type IN ('Borrow', 'Permanent', 'Both')", name="book_type"
+            "book_type IN ('Borrow', 'Permanent', 'Both')", name="check_book_type"
         ),
     )
 

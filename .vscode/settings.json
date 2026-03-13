@@ -16,7 +16,7 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "orm db",
+            "name": "swapshelf",
             "database": "swapshelf_db",
             "username": "postgres"
         }
