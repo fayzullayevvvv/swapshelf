@@ -1,6 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-from db.books import get_genres
+from db.repositories import GenreRepository
+from db.session import SessionLocal
 
 
 def get_confirm_keyboard():
@@ -27,13 +28,20 @@ def get_menu_keyboard():
 
 
 def get_genre_keyboard():
-    genres = get_genres()
+    with SessionLocal() as session:
+        GenreRepo = GenreRepository(session)
+        genres = GenreRepo.get_all_genres()
 
-    keyboard = [
-        [InlineKeyboardButton(name, callback_data=f"add_book:genre:{genre_id}")]
-        for genre_id, name in genres
-    ]
-    keyboard.append([InlineKeyboardButton("⬅️ Orqaga", callback_data="back")])
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    genre.name, callback_data=f"add_book:genre:{genre.id}"
+                )
+            ]
+            for genre in genres
+        ]
+
+        keyboard.append([InlineKeyboardButton("⬅️ Orqaga", callback_data="back")])
 
     return InlineKeyboardMarkup(keyboard)
 

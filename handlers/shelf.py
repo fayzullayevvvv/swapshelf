@@ -12,15 +12,15 @@ from keyboards.inline import (
     get_book_request_keyboard,
     get_back,
 )
-from db.books import create_book, get_my_books, get_book, save_channel_message_id
+from db.repositories import BookRepository
 from config import settings
+from db.session import SessionLocal
 
 
 def ask_title(update: Update, context: CallbackContext) -> int:
     update.callback_query.answer()
     update.callback_query.edit_message_text(
-        "Kitob nomini kiriting:",
-        reply_markup=get_back()
+        "Kitob nomini kiriting:", reply_markup=get_back()
     )
     return states.AddBookStates.SET_TITLE
 
@@ -86,22 +86,22 @@ def add_book(update: Update, context: CallbackContext) -> int:
     query.answer()
     query.edit_message_text("Kitob qo'shildi! Rahmat!")
 
-    book_id = create_book(
-        telegram_id=update.effective_user.id,
-        title=context.user_data["title"],
-        author=context.user_data["author"],
-        genre_id=context.user_data["genre"],
-        status=context.user_data["status"],
-        type_=context.user_data["type"],
-    )
+    with SessionLocal() as session:
+        BookRepo = BookRepository(session)
+        book = BookRepo.create_book(
+            telegram_id=update.effective_user.id,
+            title=context.user_data["title"],
+            author=context.user_data["author"],
+            genre_id=context.user_data["genre"],
+            status=context.user_data["status"],
+            type_=context.user_data["type"],
+        )
 
-    msg = context.bot.send_message(
-        chat_id=settings.CHANNEL_ID,
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
         text=f"📖 {context.user_data['title']}\n✍️ {context.user_data['author']}\n📚 {context.user_data['genre']}\n🔖 {context.user_data['status']}\n🔄 {context.user_data['type']}\n\n",
-        reply_markup=get_book_action_keyboard(book_id),
+        reply_markup=get_book_action_keyboard(book.id),
     )
-
-    save_channel_message_id(book_id, msg.message_id)
 
     return ConversationHandler.END
 
@@ -110,38 +110,57 @@ def show_my_books(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
-    books = get_my_books(update.effective_user.id)
+    with SessionLocal() as session:
+        BookRepo = BookRepository(session)
+        books = BookRepo.get_my_books(update.effective_user.id)
 
-    if not books:
-        query.edit_message_text(
-            text="Sizning javoningizda kitob yo'q.", reply_markup=get_back()
-        )
-        return
+        if not books:
+            query.edit_message_text(
+                text="Sizning javoningizda kitob yo'q.", reply_markup=get_back()
+            )
+            return
 
-    message = "Sizning javoningizdagi kitoblar:\n\n"
+        message = "Sizning javoningizdagi kitoblar:\n\n"
+        for book in books:
+            genre_name = book.genre.name if book.genre else "Yo'q"
+            message += (
+                f"📖 {book.title}\n"
+                f"✍️ {book.author}\n"
+                f"📚 {genre_name}\n"
+                f"🔖 {book.status}\n"
+                f"🔄 {book.type}\n\n"
+            )
 
-    for pk, title, author, genre, status, type_ in books:
-        message += f"📖 {title}\n✍️ {author}\n📚 {genre}\n🔖 {status}\n🔄 {type_}\n\n"
-
-    query.edit_message_text(text=message, reply_markup=get_back())
+        query.edit_message_text(text=message, reply_markup=get_back())
 
 
 def share_book(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     book_id = query.data.split(":")[-1]
-    book = get_book(book_id)
-    if not book:
-        query.edit_message_text("Kitob topilmadi.")
-        return
-    title, author, genre, status, type_ = book[1], book[2], book[3], book[4], book[5]
-    context.bot.send_message(
-        chat_id=settings.CHANNEL_ID,
-        text=f"📖 {title}\n✍️ {author}\n📚 {genre}\n🔖 {status}\n🔄 {type_}\n",
-        reply_markup=get_book_request_keyboard(book_id),
-    )
+
+    with SessionLocal() as session:
+        BookRepo = BookRepository(session)
+        book = BookRepo.get_book(book_id)
+
+        if not book:
+            query.edit_message_text("Kitob topilmadi.")
+            return
+
+        genre_name = book.genre.name if book.genre else "Yo'q"
+
+        context.bot.send_message(
+            chat_id=settings.CHANNEL_ID,
+            text=(
+                f"📖 {book.title}\n"
+                f"✍️ {book.author}\n"
+                f"📚 {genre_name}\n"
+                f"🔖 {book.status}\n"
+                f"🔄 {book.type}\n"
+            ),
+            reply_markup=get_book_request_keyboard(book_id),
+        )
     query.edit_message_text("Kitob almashish uchun kanalga yuborildi!")
-    update.message.reply_text(reply_markup=get_menu_keyboard())
 
 
 def back_handler(update: Update, context: CallbackContext) -> None:

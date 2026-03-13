@@ -44,28 +44,28 @@ def main() -> None:
             states={
                 states.AddBookStates.SET_TITLE: [
                     MessageHandler(Filters.text & ~Filters.command, shelf.set_title),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
                 states.AddBookStates.SET_AUTHOR: [
                     MessageHandler(Filters.text & ~Filters.command, shelf.set_author),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
                 states.AddBookStates.SET_GENRE: [
                     CallbackQueryHandler(shelf.set_genre, pattern="^add_book:genre:"),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
                 states.AddBookStates.SET_STATUS: [
                     CallbackQueryHandler(shelf.set_status, pattern="add_book:status:"),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
                 states.AddBookStates.TYPE: [
                     CallbackQueryHandler(shelf.set_type, pattern="add_book:type:"),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
                 states.AddBookStates.CONFIRM: [
                     CallbackQueryHandler(shelf.add_book, pattern="^(ha)$"),
                     CallbackQueryHandler(start.start, pattern="^(yo'q)$"),
-                    CallbackQueryHandler(shelf.back_handler, pattern="^back$")
+                    CallbackQueryHandler(shelf.back_handler, pattern="^back$"),
                 ],
             },
             fallbacks=[CommandHandler("start", start.start)],
@@ -79,7 +79,6 @@ def main() -> None:
     dispatcher.add_handler(CallbackQueryHandler(shelf.share_book, pattern="share:"))
 
     dispatcher.add_handler(CallbackQueryHandler(shelf.back_handler, pattern="^back$"))
-    
 
     updater.start_polling()
     updater.idle()
